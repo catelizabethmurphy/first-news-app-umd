@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
@@ -10,6 +11,9 @@
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
  integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
  crossorigin=""></script>
+    <script src="static/leaflet-heat.js"></script>
+    <link rel="stylesheet" href="//cdn.datatables.net/2.0.0/css/dataTables.dataTables.min.css"/>
+    <script src="//cdn.datatables.net/2.0.0/js/dataTables.min.js"></script>
     <title>One Week of Baltimore 911 Overdose Calls</title>
 </head>
 <body>
@@ -40,6 +44,7 @@
     </table>
     </table>
         <script type="text/javascript">
+            let table = new DataTable('#calls', {paging: false, scrollY: 400});
             var map = L.map('map').setView([39.3, -76.5], 11);
             var osmLayer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
@@ -69,17 +74,18 @@
             }{% if not loop.last %},{% endif %}
             {% endfor %}
         ];
-             var blackIcon = L.Icon.extend({
-                options: {
-                    iconUrl: "{{ url_for('static', filename='marker-24.png') }}",
-                    iconSize: [24, 24]
-                }
-            });
-            L.geoJSON(data, {
-                pointToLayer: function (feature, latlng) {
-                    return L.marker(latlng, {icon: new blackIcon()});
-                },
-                onEachFeature: onEachFeature
+
+            var heatdata = [
+                {% for obj in object_list %}
+                    [{{obj.lat}}, {{obj.lng}}, 0.7]
+                {% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            var heat = L.heatLayer(heatdata, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 13
             }).addTo(map);
         </script>
 </body>
